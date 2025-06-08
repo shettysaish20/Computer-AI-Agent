@@ -16,7 +16,7 @@ VisionCraft Agent is an innovative AI system designed to understand and interact
     *   **Seraphine:** Groups related UI components.
     *   **Gemini Vision:** Provides comprehensive visual analysis and icon/element naming.
 *   🧠 **LLM-Powered Task Interpretation:** Google's Gemini LLM translates user commands into a sequence of UI actions based on the visual context.
-*   🖱️ **Automated GUI Interaction:** Uses PyAutoGUI for precise mouse clicks and keyboard inputs.
+*   🖱️ **Automated GUI Interaction:** Uses `pyautogui` for precise mouse clicks and keyboard inputs.
 *   🚀 **Application Management:** Automatically launches and focuses the target application (e.g., Windows Calculator) using `pygetwindow`.
 *   📸 **Dynamic Screenshot Analysis:** Captures application state for real-time decision making.
 
@@ -36,21 +36,21 @@ The agent follows a sophisticated pipeline to achieve GUI automation:
     *   The output is a structured JSON containing identified UI elements with their properties (text, bounding box, `g_icon_name`).
 3.  **User Command Input:**
     *   The user provides a natural language command (e.g., "Calculate 50 times 3 and then add 10").
-4.  **LLM Task Interpretation (`loop.py`):**
+4.  **LLM Task Interpretation (`agent.py`):**
     *   The user's command and the list of recognized UI elements (specifically their `g_icon_name`s) are sent to a Gemini LLM.
     *   A carefully crafted system prompt guides the LLM to convert the command into a JSON array of `action_sequence` (e.g., `["5", "0", "multiply", "3", "equals", "add", "1", "0", "equals"]`).
-5.  **Action Execution (`loop.py`):**
+5.  **Action Execution (`agent.py`):**
     *   The agent parses the `action_sequence` from the LLM's response.
     *   For each action (button label) in the sequence:
         *   It finds the corresponding UI element from the CV pipeline's output.
         *   It calculates the center coordinates of the element's bounding box relative to the application window.
-        *   **PyAutoGUI** is used to click on these coordinates, simulating user interaction.
+        *   **`pyautogui`** is used to click on these coordinates, simulating user interaction.
 6.  **Loop:** The agent can then await further commands or perform subsequent actions.
 
 ## 🛠️ Technologies Used
 
 *   **Core Language:** Python 3.7+
-*   **GUI Automation:** PyAutoGUI
+*   **GUI Automation:** `pyautogui`
 *   **Window Management:** `pygetwindow`
 *   **Image Processing:** OpenCV, Pillow
 *   **LLMs:** `google-genai` (for Gemini Pro and Gemini Vision Pro)
