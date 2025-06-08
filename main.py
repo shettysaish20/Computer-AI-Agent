@@ -484,7 +484,7 @@ def display_enhanced_pipeline_summary(image_path, detection_results, seraphine_a
 
     debug_print(f"🔗 Perfect ID Traceability: Y/O IDs → M IDs → Seraphine Groups → Gemini Analysis")
 
-async def main(img_bgr = None):
+async def main(image_path):
     """Main enhanced pipeline execution - MODE AWARE"""
     pipeline_start = time.time()
     
@@ -513,12 +513,12 @@ async def main(img_bgr = None):
     debug_print("=" * 90)
     
     yolo_config, ocr_config = setup_detector_configs(config)
-    if not img_bgr:
+    if not image_path:
         # image_path = "images/word.png"
         image_path = "images/calculator.png"
-        img_bgr = load_image_opencv(image_path)
-    if img_bgr is None:
-        return None
+    img_bgr = load_image_opencv(image_path)
+    # if img_bgr is None:
+    #     return None
     
     debug_print(f"📸 Image loaded: {img_bgr.shape[1]}x{img_bgr.shape[0]} pixels")
     
@@ -535,6 +535,7 @@ async def main(img_bgr = None):
             debug_print("\n🖼️  Step 3: Generating Seraphine Grouped Images")
             
             from utils.seraphine_generator import FinalGroupImageGenerator
+            # image_path = 'temp_detection_image.jpg'  # Use the temp image path from detection step
             
             output_dir = config.get("output_dir", "outputs")
             filename_base = os.path.splitext(os.path.basename(image_path))[0]
@@ -597,10 +598,10 @@ async def main(img_bgr = None):
             pipeline_results, json_path = save_enhanced_pipeline_json(image_path, detection_results, seraphine_analysis, gemini_results, config) # type: ignore
             
             # Step 6: Create Visualizations
-            visualization_paths = create_visualizations(image_path, detection_results, seraphine_analysis, config, gemini_results)
+            # visualization_paths = create_visualizations(image_path, detection_results, seraphine_analysis, config, gemini_results)
             
             # Summary
-            display_enhanced_pipeline_summary(image_path, detection_results, seraphine_analysis, gemini_results, visualization_paths, json_path, config)
+            # display_enhanced_pipeline_summary(image_path, detection_results, seraphine_analysis, gemini_results, visualization_paths, json_path, config)
             
             # return {
             #     'detection_results': detection_results,
@@ -656,14 +657,14 @@ async def extract_elements_from_seraphine_gemini_groups(seraphine_groups):
     
     return extracted_elements
 
-async def process_os_image(image = None):
+async def process_os_image(image_path: str = "temp_screenshots/temp_screenshot.png"):
     """
     Process an OS image (e.g., from screenshot) to run the pipeline
     This is a placeholder for future integration with OS-specific image capture
     """
     # For now, just return the image as-is
     extracted_elements = []
-    gemini_results, pipeline_results = await main(img_bgr=image)  # type: ignore
+    gemini_results, pipeline_results = await main(image_path=image_path)  # type: ignore
     if not pipeline_results:
         debug_print("❌ Pipeline failed to process OS image")
         return None
