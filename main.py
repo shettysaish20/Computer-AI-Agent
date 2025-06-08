@@ -484,7 +484,7 @@ def display_enhanced_pipeline_summary(image_path, detection_results, seraphine_a
 
     debug_print(f"🔗 Perfect ID Traceability: Y/O IDs → M IDs → Seraphine Groups → Gemini Analysis")
 
-async def main():
+async def main(img_bgr = None):
     """Main enhanced pipeline execution - MODE AWARE"""
     pipeline_start = time.time()
     
@@ -513,9 +513,10 @@ async def main():
     debug_print("=" * 90)
     
     yolo_config, ocr_config = setup_detector_configs(config)
-    # image_path = "images/word.png"
-    image_path = "images/google_form.png"
-    img_bgr = load_image_opencv(image_path)
+    if not img_bgr:
+        # image_path = "images/word.png"
+        image_path = "images/calculator.png"
+        img_bgr = load_image_opencv(image_path)
     if img_bgr is None:
         return None
     
@@ -593,7 +594,7 @@ async def main():
         
         else:  # DEBUG MODE - Full verbose output with emojis
             # Step 5: Save JSON
-            json_path = save_enhanced_pipeline_json(image_path, detection_results, seraphine_analysis, gemini_results, config)
+            pipeline_results, json_path = save_enhanced_pipeline_json(image_path, detection_results, seraphine_analysis, gemini_results, config) # type: ignore
             
             # Step 6: Create Visualizations
             visualization_paths = create_visualizations(image_path, detection_results, seraphine_analysis, config, gemini_results)
@@ -601,16 +602,17 @@ async def main():
             # Summary
             display_enhanced_pipeline_summary(image_path, detection_results, seraphine_analysis, gemini_results, visualization_paths, json_path, config)
             
-            return {
-                'detection_results': detection_results,
-                'seraphine_analysis': seraphine_analysis,
-                'gemini_results': gemini_results,
-                'grouped_image_paths': grouped_image_paths,
-                'visualization_paths': visualization_paths,
-                'json_path': json_path,
-                'config': config,
-                'total_time': total_time
-            }
+            # return {
+            #     'detection_results': detection_results,
+            #     'seraphine_analysis': seraphine_analysis,
+            #     'gemini_results': gemini_results,
+            #     'grouped_image_paths': grouped_image_paths,
+            #     'visualization_paths': visualization_paths,
+            #     'json_path': json_path,
+            #     'config': config,
+            #     'total_time': total_time
+            # }
+            return gemini_results, pipeline_results
         
     except Exception as e:
         # Calculate time even on error
@@ -625,10 +627,62 @@ async def main():
             traceback.print_exc()  # Fixed: remove debug_print_exc
         
         return None
+    
+async def extract_elements_from_seraphine_gemini_groups(seraphine_groups):
+    """
+    Extracts objects containing 'bbox' and 'g_icon_name' from the 
+    'seraphine_gemini_groups' structure into a single list.
+
+    Args:
+        seraphine_groups (dict): The dictionary containing the 'seraphine_groups' data.
+
+    Returns:
+        list: A list of dictionaries, where each dictionary is an extracted element
+            containing at least 'bbox' and 'g_icon_name'.
+    """
+    extracted_elements = []
+
+    # Iterate through each group type (e.g., "H0", "H1", "V0", "HL0")
+    for group_type_key, group_type_value in seraphine_groups.items():
+        if isinstance(group_type_value, dict):
+            # Iterate through each specific group within the type (e.g., "H0_1", "H1_1")
+            for specific_group_key, element_data in group_type_value.items():
+                if isinstance(element_data, dict):
+                    # Check if the element has both 'bbox' and 'g_icon_name'
+                    if "bbox" in element_data and "g_icon_name" in element_data:
+                        # You can choose to extract the whole element_data dictionary
+                        # or just specific keys if needed. Here, we take the whole dict.
+                        extracted_elements.append(element_data)
+    
+    return extracted_elements
+
+async def process_os_image(image = None):
+    """
+    Process an OS image (e.g., from screenshot) to run the pipeline
+    This is a placeholder for future integration with OS-specific image capture
+    """
+    # For now, just return the image as-is
+    extracted_elements = []
+    gemini_results, pipeline_results = await main(img_bgr=image)  # type: ignore
+    if not pipeline_results:
+        debug_print("❌ Pipeline failed to process OS image")
+        return None
+    seraphine_field_name = "seraphine_gemini_groups" if gemini_results else "seraphine_groups"
+    
+    seraphine_gemini_groups = pipeline_results.get(seraphine_field_name, {}) # type: ignore
+    
+    if not seraphine_gemini_groups:
+        debug_print("ERROR: Gemini or Seraphine groups are empty!")
+        return []
+    
+    extracted_elements = await extract_elements_from_seraphine_gemini_groups(seraphine_gemini_groups)
+    
+    return extracted_elements
+
 
 if __name__ == "__main__":
     try:
-        results = asyncio.run(main())
+        results = asyncio.run(process_os_image())
         print(results)
     except Exception as e:
         print(f"Critical startup error: {e}")

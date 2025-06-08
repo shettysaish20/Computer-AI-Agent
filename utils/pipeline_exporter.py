@@ -142,4 +142,4 @@ def save_enhanced_pipeline_json(image_path, detection_results, seraphine_analysi
     debug_print(f"   🔗 Perfect ID mapping: Y/O → M → Seraphine Groups → Gemini Analysis")
     debug_print(f"   🎯 Field name: '{seraphine_field_name}' (dynamic based on Gemini success)")
     
-    return json_path
+    return pipeline_results, json_path
