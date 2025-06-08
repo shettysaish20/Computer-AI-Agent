@@ -513,7 +513,8 @@ async def main():
     debug_print("=" * 90)
     
     yolo_config, ocr_config = setup_detector_configs(config)
-    image_path = "images/word.png"
+    # image_path = "images/word.png"
+    image_path = "images/google_form.png"
     img_bgr = load_image_opencv(image_path)
     if img_bgr is None:
         return None
@@ -628,5 +629,6 @@ async def main():
 if __name__ == "__main__":
     try:
         results = asyncio.run(main())
+        print(results)
     except Exception as e:
         print(f"Critical startup error: {e}")
