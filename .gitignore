@@ -38,7 +38,6 @@ output.jpeg
 *.pdf
 *.webp
 *.txt
-*.json
 *.csv
 *.tsv
 !config.json
